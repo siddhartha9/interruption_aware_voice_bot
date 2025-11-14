@@ -940,7 +940,13 @@ class ConnectionOrchestrator:
                 )
                 self.ai_agent.cancel()  # Cancels LLM + Tools
                 
-                # 2. Clear old audio immediately
+                # 2. Clear old audio/text immediately
+                while not self.text_stream_queue.empty():
+                    try:
+                        self.text_stream_queue.get_nowait()
+                    except asyncio.QueueEmpty:
+                        break
+                
                 self.audio_output_queue.clear()
                 
                 # 3. Update Chat History with the user prompt
