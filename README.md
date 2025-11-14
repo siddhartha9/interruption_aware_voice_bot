@@ -269,13 +269,6 @@ python server.py --reload
 cd client_app && python3 run_client.py
 ```
 
-### Adding New Features
-
-1. **New STT Provider**: Edit `src/server/stt.py`
-2. **New LLM**: Edit `src/server/ai_agent.py`
-3. **New TTS**: Edit `src/server/tts.py`
-4. **New Client Features**: Edit `client_app/app.js`
-
 ### Testing
 
 ```bash
@@ -315,36 +308,6 @@ curl http://127.0.0.1:8000/health
 - Deepgram Aura (50-100ms, ultra-fast)
 - Coqui TTS (on-device, free)
 
-## 🔒 Security Notes
-
-### For Development
-- ✅ API keys in `.env` (not committed)
-- ✅ CORS allows all origins (easy testing)
-- ⚠️ No authentication (single user)
-
-### For Production
-- 🔒 Use environment variables (not `.env` file)
-- 🔒 Restrict CORS to specific domains
-- 🔒 Add JWT authentication for WebSocket
-- 🔒 Use WSS (WebSocket Secure) instead of WS
-- 🔒 Rate limit API calls per user
-- 🔒 Encrypt audio data in transit
-
-## 📚 Documentation
-
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: System design and architecture
-- **[TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md)**: Detailed technical implementation
-- **[API Documentation](http://127.0.0.1:8000/docs)**: Interactive API docs (when server is running)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## 📝 License
 
@@ -357,16 +320,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Silero**: Client-side VAD model
 - **FastAPI**: Modern Python web framework
 - **LangChain/LangGraph**: LLM orchestration
-
-## 📧 Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check [TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md) for detailed documentation
-- Review server logs in `server.log` (if using start_both.sh)
-
----
-
-**Built with ❤️ using Python, FastAPI, and cutting-edge AI**
-# interruption_aware_voice_bot
-# interruption_aware_voice_bot
