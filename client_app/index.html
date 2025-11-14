@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Bot - Silero VAD</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
+    
+    <!-- Application Modules -->
+    <script src="logger.js"></script>
+    <script src="ui_manager.js"></script>
+    <script src="websocket_client.js"></script>
+    <script src="silero_vad.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Voice Bot Client</h1>
+        <p class="subtitle">Powered by Silero VAD - AI Speech Detection</p>
+
+        <div id="status" class="status disconnected">
+            <span class="indicator red"></span>
+            Status: Disconnected
+        </div>
+
+        <div class="vad-status" id="vadStatus">
+            ⏳ VAD: Not initialized
+        </div>
+
+        <div class="buttons">
+            <button id="connectBtn" class="btn-connect" onclick="app.connect()">
+                🔌 Connect
+            </button>
+            <button id="disconnectBtn" class="btn-disconnect" onclick="app.disconnect()" disabled>
+                🔌 Disconnect
+            </button>
+            <button id="listenBtn" class="btn-listen" onclick="app.startListening()" disabled>
+                🎤 Start Listening
+            </button>
+            <button id="stopBtn" class="btn-stop" onclick="app.stopListening()" disabled>
+                🛑 Stop Listening
+            </button>
+        </div>
+
+        <h3>💬 Conversation</h3>
+        <div id="conversation" class="conversation">
+            <div class="message system">
+                <div class="label">System</div>
+                <div>Ready to start. Click "Connect" and then "Start Listening"</div>
+            </div>
+        </div>
+
+        <h3>📊 Event Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
+

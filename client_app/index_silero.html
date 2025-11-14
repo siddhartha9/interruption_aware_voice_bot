@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Bot - Silero VAD</title>
+    
+    <!-- Silero VAD Library -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .status.disconnected {
+            background: #fee;
+            color: #c33;
+        }
+
+        .status.connected {
+            background: #efe;
+            color: #3c3;
+        }
+
+        .status.listening {
+            background: #ffc;
+            color: #cc6;
+        }
+
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .indicator.red { background: #f44; }
+        .indicator.green { background: #4f4; }
+        .indicator.yellow { background: #ff4; }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-connect {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-disconnect {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-listen {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-stop {
+            background: #FF9800;
+            color: white;
+        }
+
+        .conversation {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .message.user {
+            background: #e3f2fd;
+            margin-left: 20px;
+        }
+
+        .message.assistant {
+            background: #f3e5f5;
+            margin-right: 20px;
+        }
+
+        .message.system {
+            background: #fff3e0;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px;
+        }
+
+        .log-entry.sent {
+            color: #4fc3f7;
+        }
+
+        .log-entry.received {
+            color: #81c784;
+        }
+
+        .log-entry.error {
+            color: #e57373;
+        }
+
+        h3 {
+            color: #333;
+            margin: 20px 0 10px 0;
+            font-size: 18px;
+        }
+
+        .vad-status {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Voice Bot Client</h1>
+        <p class="subtitle">Powered by Silero VAD - AI Speech Detection</p>
+
+        <div id="status" class="status disconnected">
+            <span class="indicator red"></span>
+            Status: Disconnected
+        </div>
+
+        <div class="vad-status" id="vadStatus">
+            ⏳ VAD: Not initialized
+        </div>
+
+        <div class="buttons">
+            <button id="connectBtn" class="btn-connect" onclick="connect()">
+                🔌 Connect
+            </button>
+            <button id="disconnectBtn" class="btn-disconnect" onclick="disconnect()" disabled>
+                🔌 Disconnect
+            </button>
+            <button id="listenBtn" class="btn-listen" onclick="startListening()" disabled>
+                🎤 Start Listening
+            </button>
+            <button id="stopBtn" class="btn-stop" onclick="stopListening()" disabled>
+                🛑 Stop Listening
+            </button>
+        </div>
+
+        <h3>💬 Conversation</h3>
+        <div id="conversation" class="conversation">
+            <div class="message system">
+                <div class="label">System</div>
+                <div>Ready to start. Click "Connect" and then "Start Listening"</div>
+            </div>
+        </div>
+
+        <h3>📊 Event Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let myvad = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isListening = false;
+        let isRecording = false;
+        let speechStartSent = false;  // Track if speech_start was sent
+
+        // UI Elements
+        const statusDiv = document.getElementById('status');
+        const vadStatus = document.getElementById('vadStatus');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const listenBtn = document.getElementById('listenBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const conversation = document.getElementById('conversation');
+        const logDiv = document.getElementById('log');
+
+        function updateStatus(state, message) {
+            const indicator = statusDiv.querySelector('.indicator');
+            statusDiv.className = `status ${state}`;
+            
+            if (state === 'disconnected') {
+                indicator.className = 'indicator red';
+                statusDiv.innerHTML = `<span class="indicator red"></span>${message}`;
+            } else if (state === 'connected') {
+                indicator.className = 'indicator green';
+                statusDiv.innerHTML = `<span class="indicator green"></span>${message}`;
+            } else if (state === 'listening') {
+                indicator.className = 'indicator yellow';
+                statusDiv.innerHTML = `<span class="indicator yellow"></span>${message}`;
+            }
+        }
+
+        function updateVADStatus(message) {
+            vadStatus.textContent = message;
+        }
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function addMessage(role, content) {
+            const message = document.createElement('div');
+            message.className = `message ${role}`;
+            
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = role === 'user' ? 'You' : role === 'assistant' ? 'Bot' : 'System';
+            
+            const text = document.createElement('div');
+            text.textContent = content;
+            
+            message.appendChild(label);
+            message.appendChild(text);
+            conversation.appendChild(message);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        async function connect() {
+            try {
+                ws = new WebSocket('ws://127.0.0.1:8000/ws');
+                
+                ws.onopen = () => {
+                    log('✓ Connected to server', 'received');
+                    updateStatus('connected', 'Status: Connected ✓');
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    listenBtn.disabled = false;
+                };
+                
+                ws.onmessage = async (event) => {
+                    const data = JSON.parse(event.data);
+                    log(`← Received: ${data.event}`, 'received');
+                    
+                    if (data.event === 'audio_chunk' && data.audio) {
+                        // Play audio
+                        const audio = new Audio('data:audio/mp3;base64,' + data.audio);
+                        audio.play();
+                        log('🔊 Playing audio chunk', 'received');
+                    } else if (data.event === 'conversation_turn') {
+                        if (data.user) addMessage('user', data.user);
+                        if (data.assistant) addMessage('assistant', data.assistant);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    log(`✗ WebSocket error`, 'error');
+                    console.error('WebSocket error:', error);
+                };
+                
+                ws.onclose = () => {
+                    log('✗ Disconnected from server', 'error');
+                    updateStatus('disconnected', 'Status: Disconnected');
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    listenBtn.disabled = true;
+                    stopBtn.disabled = true;
+                    ws = null;
+                };
+                
+            } catch (error) {
+                log(`✗ Connection error: ${error.message}`, 'error');
+                alert('Failed to connect to server. Make sure the server is running on port 8000.');
+            }
+        }
+
+        function disconnect() {
+            if (myvad) {
+                myvad.pause();
+                myvad = null;
+            }
+            if (ws) {
+                ws.close();
+            }
+            updateVADStatus('⏹️ VAD: Stopped');
+        }
+
+        async function startListening() {
+            try {
+                log('🎤 Initializing Silero VAD...', 'info');
+                addMessage('system', 'Loading AI-powered voice detection...');
+                updateVADStatus('⏳ VAD: Loading model...');
+                
+                // Initialize Silero VAD
+                myvad = await vad.MicVAD.new({
+                    // Called when speech starts
+                    onSpeechStart: () => {
+                        log('🎤 [Silero VAD] Speech detected!', 'sent');
+                        
+                        if (!isRecording) {
+                            isRecording = true;
+                            speechStartSent = false;  // Reset flag
+                            audioChunks = [];
+                            
+                            // Start MediaRecorder
+                            if (mediaRecorder && mediaRecorder.state === 'inactive') {
+                                mediaRecorder.start(100);
+                                log('📼 Recording started', 'info');
+                            }
+                            
+                            // Send speech_start to server
+                            if (ws && ws.readyState === WebSocket.OPEN && !speechStartSent) {
+                                ws.send(JSON.stringify({ type: 'speech_start' }));
+                                speechStartSent = true;
+                                log('→ Sent: speech_start', 'sent');
+                                addMessage('system', '🎤 Listening...');
+                                updateStatus('listening', 'Status: Recording... 🎤');
+                                updateVADStatus('🎤 VAD: Recording speech');
+                            }
+                        }
+                    },
+                    
+                    // Called when speech ends
+                    onSpeechEnd: (audio) => {
+                        log('🤫 [Silero VAD] Speech ended', 'info');
+                        
+                        if (isRecording) {
+                            isRecording = false;
+                            
+                            // Stop MediaRecorder
+                            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                                mediaRecorder.stop();
+                                log('🛑 Recording stopped', 'info');
+                            }
+                            
+                            updateStatus('connected', 'Status: Processing...');
+                            updateVADStatus('✅ VAD: Ready (waiting for speech)');
+                            speechStartSent = false;  // Reset for next utterance
+                        }
+                    },
+                    
+                    // VAD Configuration
+                    positiveSpeechThreshold: 0.85,  // Higher threshold = less sensitive (fewer false positives)
+                    negativeSpeechThreshold: 0.70,  // End threshold (hysteresis)
+                    minSpeechFrames: 5,  // Require more frames to confirm speech (reduce false triggers)
+                    redemptionFrames: 8,  // Frames to wait before ending (~0.5s at 16kHz)
+                    preSpeechPadFrames: 1,  // Include frames before speech
+                    
+                    // Audio will be obtained automatically
+                });
+                
+                // Get mic stream from VAD
+                const stream = myvad.stream;
+                
+                // Setup MediaRecorder
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm'
+                });
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    if (audioChunks.length === 0) {
+                        log('⚠️ No audio recorded', 'error');
+                        return;
+                    }
+                    
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    log(`📦 Audio blob: ${audioBlob.size} bytes`, 'info');
+                    
+                    // Convert to base64
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        const base64Audio = reader.result.split(',')[1];
+                        
+                        // Send speech_end with audio
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({
+                                type: 'speech_end',
+                                audio: base64Audio
+                            }));
+                            log('→ Sent: speech_end with audio', 'sent');
+                            addMessage('user', 'Processing...');
+                        }
+                        
+                        // Clear for next recording
+                        audioChunks = [];
+                    };
+                };
+                
+                // Start VAD
+                myvad.start();
+                isListening = true;
+                
+                updateStatus('connected', 'Status: Ready - Speak when ready! 🎤');
+                updateVADStatus('✅ VAD: Active (AI listening)');
+                listenBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                log('✅ Silero VAD activated!', 'received');
+                addMessage('system', '✅ AI voice detection active. Speak naturally!');
+                
+            } catch (error) {
+                log(`✗ VAD error: ${error.message}`, 'error');
+                addMessage('system', `Error: ${error.message}`);
+                updateVADStatus('❌ VAD: Failed to load');
+                console.error('VAD Error:', error);
+                alert('Failed to initialize Silero VAD. Please refresh and try again.');
+            }
+        }
+
+        function stopListening() {
+            if (myvad) {
+                myvad.pause();
+                isListening = false;
+                isRecording = false;
+                speechStartSent = false;
+                
+                updateStatus('connected', 'Status: Connected ✓');
+                updateVADStatus('⏹️ VAD: Paused');
+                listenBtn.disabled = false;
+                stopBtn.disabled = true;
+                
+                log('🛑 Stopped listening', 'info');
+                addMessage('system', 'Stopped listening');
+            }
+        }
+    </script>
+</body>
+</html>
+

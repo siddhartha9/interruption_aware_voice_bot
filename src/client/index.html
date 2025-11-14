@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Bot Client</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .status {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f7f7f7;
+      border-radius: 10px;
+    }
+    
+    .status-item {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .status-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    .status-value {
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .status-value.connected { color: #10b981; }
+    .status-value.disconnected { color: #ef4444; }
+    .status-value.recording { color: #f59e0b; }
+    .status-value.playing { color: #3b82f6; }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-connect {
+      background: #10b981;
+      color: white;
+    }
+    
+    .btn-disconnect {
+      background: #ef4444;
+      color: white;
+    }
+    
+    .btn-record {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .btn-stop {
+      background: #f59e0b;
+      color: white;
+    }
+    
+    .conversation {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    
+    .message {
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message.user {
+      background: #dbeafe;
+      margin-left: 20px;
+    }
+    
+    .message.agent {
+      background: #e0e7ff;
+      margin-right: 20px;
+    }
+    
+    .message.system {
+      background: #fef3c7;
+      text-align: center;
+      font-size: 14px;
+      font-style: italic;
+    }
+    
+    .message-label {
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .message.user .message-label { color: #1e40af; }
+    .message.agent .message-label { color: #4338ca; }
+    
+    .message-content {
+      color: #333;
+      line-height: 1.5;
+    }
+    
+    .settings {
+      background: #f7f7f7;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    
+    .settings-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .setting-item label {
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .setting-item input {
+      width: 60px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    
+    .recording-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ef4444;
+      animation: pulse 1.5s ease-in-out infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎙️ Voice Bot</h1>
+    <p class="subtitle">Client-Side VAD + Server Orchestrator</p>
+    
+    <div class="status">
+      <div class="status-item">
+        <div class="status-label">Connection</div>
+        <div class="status-value disconnected" id="status-connection">Disconnected</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Recording</div>
+        <div class="status-value" id="status-recording">
+          <span id="recording-text">Idle</span>
+          <div id="recording-indicator" style="display:none;" class="recording-indicator"></div>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Playback</div>
+        <div class="status-value" id="status-playback">Idle</div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button class="btn-connect" id="btn-connect">Connect</button>
+      <button class="btn-disconnect" id="btn-disconnect" disabled>Disconnect</button>
+    </div>
+    
+    <div class="controls">
+      <button class="btn-record" id="btn-record" disabled>Start Recording</button>
+      <button class="btn-stop" id="btn-stop" disabled>Stop Recording</button>
+    </div>
+    
+    <div class="conversation" id="conversation">
+      <div class="message system">
+        Welcome! Connect to the server and start recording to begin.
+      </div>
+    </div>
+    
+    <div class="settings">
+      <div class="settings-title">Settings</div>
+      <div class="setting-item">
+        <label>Server URL:</label>
+        <input type="text" id="server-url" value="ws://localhost:8000/ws" style="width: 200px;">
+      </div>
+      <div class="setting-item">
+        <label>VAD Threshold:</label>
+        <input type="number" id="vad-threshold" value="0.01" step="0.001" min="0" max="1">
+      </div>
+    </div>
+  </div>
+  
+  <script type="module">
+    import VoiceBotClient from './websocket_handler.js';
+    
+    // UI Elements
+    const btnConnect = document.getElementById('btn-connect');
+    const btnDisconnect = document.getElementById('btn-disconnect');
+    const btnRecord = document.getElementById('btn-record');
+    const btnStop = document.getElementById('btn-stop');
+    const statusConnection = document.getElementById('status-connection');
+    const statusRecording = document.getElementById('status-recording');
+    const statusPlayback = document.getElementById('status-playback');
+    const conversation = document.getElementById('conversation');
+    const serverUrlInput = document.getElementById('server-url');
+    const vadThresholdInput = document.getElementById('vad-threshold');
+    const recordingIndicator = document.getElementById('recording-indicator');
+    const recordingText = document.getElementById('recording-text');
+    
+    // Voice bot client
+    let client = null;
+    
+    // Connect button
+    btnConnect.addEventListener('click', async () => {
+      const serverUrl = serverUrlInput.value;
+      const vadThreshold = parseFloat(vadThresholdInput.value);
+      
+      client = new VoiceBotClient(serverUrl, {
+        sampleRate: 16000,
+        playbackSampleRate: 24000,
+        vadOptions: {
+          energyThreshold: vadThreshold,
+          aggressiveness: 3
+        },
+        onConnected: () => {
+          statusConnection.textContent = 'Connected';
+          statusConnection.className = 'status-value connected';
+          btnConnect.disabled = true;
+          btnDisconnect.disabled = false;
+          btnRecord.disabled = false;
+          addMessage('system', 'Connected to server!');
+        },
+        onDisconnected: () => {
+          statusConnection.textContent = 'Disconnected';
+          statusConnection.className = 'status-value disconnected';
+          btnConnect.disabled = false;
+          btnDisconnect.disabled = true;
+          btnRecord.disabled = true;
+          btnStop.disabled = true;
+          addMessage('system', 'Disconnected from server');
+        },
+        onError: (error) => {
+          addMessage('system', `Error: ${error.message}`);
+        },
+        onTranscript: (text) => {
+          addMessage('user', text);
+        },
+        onAgentResponse: (text) => {
+          addMessage('agent', text);
+        }
+      });
+      
+      await client.connect();
+    });
+    
+    // Disconnect button
+    btnDisconnect.addEventListener('click', () => {
+      if (client) {
+        client.stopRecording();
+        client.disconnect();
+        client = null;
+      }
+    });
+    
+    // Record button
+    btnRecord.addEventListener('click', async () => {
+      if (!client) return;
+      
+      await client.startRecording();
+      statusRecording.innerHTML = '';
+      recordingIndicator.style.display = 'block';
+      statusRecording.appendChild(recordingIndicator);
+      btnRecord.disabled = true;
+      btnStop.disabled = false;
+      addMessage('system', 'Recording started. Speak now!');
+    });
+    
+    // Stop button
+    btnStop.addEventListener('click', () => {
+      if (!client) return;
+      
+      client.stopRecording();
+      statusRecording.innerHTML = '<span id="recording-text">Idle</span>';
+      btnRecord.disabled = false;
+      btnStop.disabled = true;
+      addMessage('system', 'Recording stopped');
+    });
+    
+    // Add message to conversation
+    function addMessage(type, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      
+      if (type !== 'system') {
+        const label = document.createElement('div');
+        label.className = 'message-label';
+        label.textContent = type === 'user' ? 'You' : 'Agent';
+        messageDiv.appendChild(label);
+      }
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.textContent = content;
+      messageDiv.appendChild(contentDiv);
+      
+      conversation.appendChild(messageDiv);
+      conversation.scrollTop = conversation.scrollHeight;
+    }
+    
+    // Update playback status periodically
+    setInterval(() => {
+      if (client) {
+        const status = client.getStatus();
+        if (status.playback.isPlaying) {
+          statusPlayback.textContent = status.playback.isPaused ? 'Paused' : 'Playing';
+          statusPlayback.className = 'status-value playing';
+        } else {
+          statusPlayback.textContent = 'Idle';
+          statusPlayback.className = 'status-value';
+        }
+      }
+    }, 100);
+  </script>
+</body>
+</html>
+

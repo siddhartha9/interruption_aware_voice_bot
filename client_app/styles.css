@@ -1,0 +1,206 @@
+/* Voice Bot Client Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 40px;
+    max-width: 800px;
+    width: 100%;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 32px;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 14px;
+}
+
+.status {
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.status.disconnected {
+    background: #fee;
+    color: #c33;
+}
+
+.status.connected {
+    background: #efe;
+    color: #3c3;
+}
+
+.status.listening {
+    background: #ffc;
+    color: #cc6;
+}
+
+.indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.indicator.red { background: #f44; }
+.indicator.green { background: #4f4; }
+.indicator.yellow { background: #ff4; }
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-connect {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-disconnect {
+    background: #f44336;
+    color: white;
+}
+
+.btn-listen {
+    background: #2196F3;
+    color: white;
+}
+
+.btn-stop {
+    background: #FF9800;
+    color: white;
+}
+
+.conversation {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.message.user {
+    background: #e3f2fd;
+    margin-left: 20px;
+}
+
+.message.assistant {
+    background: #f3e5f5;
+    margin-right: 20px;
+}
+
+.message.system {
+    background: #fff3e0;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 12px;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.log {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.log-entry {
+    margin: 2px 0;
+    padding: 2px;
+}
+
+.log-entry.sent {
+    color: #4fc3f7;
+}
+
+.log-entry.received {
+    color: #81c784;
+}
+
+.log-entry.error {
+    color: #e57373;
+}
+
+h3 {
+    color: #333;
+    margin: 20px 0 10px 0;
+    font-size: 18px;
+}
+
+.vad-status {
+    background: #e8f5e9;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
