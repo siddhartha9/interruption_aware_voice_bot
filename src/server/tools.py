@@ -36,19 +36,21 @@ def _run_sync_tool_with_registry(
         cancel_event.set()
 
     async def _execute():
-                tool_id = await registry.register_tool(
-            tool_name=tool_name,
-            cancel_async_fn=_cancel,
-            metadata=metadata or {},
-        )
+        tool_id: Optional[str] = None
         try:
+            tool_id = await registry.register_tool(
+                tool_name=tool_name,
+                cancel_async_fn=_cancel,
+                metadata=metadata or {},
+            )
             result = await work_coro_factory(cancel_event, {"tool_id": tool_id})
             if result is not None:
                 result_holder["result"] = result
         except Exception as exc:
             error_holder["error"] = exc
         finally:
-            await registry.unregister_tool(tool_id)
+            if tool_id is not None:
+                await registry.unregister_tool(tool_id)
             done_event.set()
 
     # Schedule execution on the background tool loop (ensures we can await)
@@ -136,7 +138,7 @@ def email_bank_statement(email: str) -> str:
     
     async def _register_and_start():
         try:
-        tool_id = await registry.register_tool(
+            tool_id = await registry.register_tool(
                 tool_name="email_bank_statement",
                 cancel_async_fn=_cancel_statement,
                 metadata={"email": email},
