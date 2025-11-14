@@ -9,6 +9,8 @@
     query_1_5s_another.wav: 1 times (3.2%)
     query_3s_email.wav: 1 times (3.2%)
 
+Concurrency = 10
+Requests = 3 per client
 
 🔌 CONNECTION LATENCY
      Min:       58.4ms  (0.058s)

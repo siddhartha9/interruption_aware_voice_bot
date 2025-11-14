@@ -57,6 +57,7 @@ We use **client-side VAD** with server-side orchestration for optimal performanc
 4. **TTS Module**: Google TTS (gTTS) for text-to-speech
 5. **Prompt Generator**: Intelligent prompt construction and history management
 6. **Interruption Handler**: Manages pause-and-decide interruption strategy
+7. **Queue Layer**: `stt_job_queue`, `stt_output_list`, `text_stream_queue`, and `audio_output_queue` decouple STT input, transcription output, agent text, and client audio streaming
 
 ## Key Design Patterns
 
@@ -278,15 +279,6 @@ def is_system_idle():
     )
 ```
 
-### Response Tracking
-```python
-# Tracks entire response cycle
-response_in_progress = True  # Set when agent starts
-# ...agent generates, TTS processes, client plays...
-response_in_progress = False  # Set when client finishes playing
-
-# This ensures interruptions during any phase are detected
-```
 
 ## Scalability Considerations
 
@@ -296,7 +288,7 @@ response_in_progress = False  # Set when client finishes playing
 - ✅ FastAPI handles multiple concurrent connections
 
 ### For Production Scale
-Consider:
+
 1. **Load Balancer**: Distribute WebSocket connections
 2. **Redis**: Share state across multiple server instances
 3. **Message Queue**: Decouple STT/LLM/TTS into separate services
@@ -329,35 +321,10 @@ Consider:
 - ✅ Loaded via `python-dotenv`
 - ✅ Never exposed to client
 
-### WebSocket
-- ⚠️ Currently no authentication
-- For production: Add JWT token validation
 
 ### Audio Data
 - ✅ Sent over WebSocket (can use WSS for encryption)
-- ✅ Not stored on server (processed in memory)
-- For production: Add audio encryption
-
-### CORS
-- ⚠️ Currently allows all origins (`allow_origins=["*"]`)
-- For production: Restrict to specific domains
 
 ## Future Enhancements
 
-### Short Term
-1. **Faster TTS**: Replace gTTS with ElevenLabs or Deepgram Aura
-2. **Authentication**: Add user login and session management
-3. **Conversation Persistence**: Save chat history to database
-4. **Multiple Voices**: Let users choose TTS voice
-
-### Medium Term
-1. **Multi-Language Support**: Detect language and switch STT/LLM/TTS
-2. **Custom Wake Words**: "Hey Assistant" to activate
-3. **Emotion Detection**: Adjust tone based on user sentiment
-4. **Context Management**: Summarize long conversations
-
-### Long Term
-1. **On-Device Models**: Run VAD, STT, LLM locally for privacy
-2. **Video Input**: Process visual context along with audio
-3. **Multi-Modal Output**: Generate images, code, etc.
-4. **Agent Tools**: Calendar, email, web search integration
+1. **Faster Latency**: Run STT, TTS on client side. Then the server communication is fully text and will be much faster
