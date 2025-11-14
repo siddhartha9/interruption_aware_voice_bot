@@ -269,13 +269,6 @@ python server.py --reload
 cd client_app && python3 run_client.py
 ```
 
-### Adding New Features
-
-1. **New STT Provider**: Edit `src/server/stt.py`
-2. **New LLM**: Edit `src/server/ai_agent.py`
-3. **New TTS**: Edit `src/server/tts.py`
-4. **New Client Features**: Edit `client_app/app.js`
-
 ### Testing
 
 ```bash
