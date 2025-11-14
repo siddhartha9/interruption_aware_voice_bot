@@ -125,8 +125,3 @@
 - ❌ 24/7 production use
 
 **Time to production-ready**: **1-2 weeks** (with P0 fixes)
-
----
-
-**For detailed analysis, see**: `METRICS_ABLATIONS_IMPROVEMENTS.md`
-
