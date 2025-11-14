@@ -4,7 +4,6 @@ A production-ready voice bot with intelligent interruption handling, powered by 
 
 ## ✨ Features
 
-- ⚡ **Ultra-Fast Responses**: Groq Llama-3.3-70B delivers 500+ tokens/second
 - 🎤 **Smart Interruptions**: Natural barge-in handling with pause-and-decide strategy
 - 🧠 **Context-Aware**: Maintains conversation history with intelligent prompt management
 - 🔊 **High-Quality STT**: Deepgram Nova-2 for accurate transcription
