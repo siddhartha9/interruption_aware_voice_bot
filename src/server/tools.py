@@ -139,10 +139,10 @@ def email_bank_statement(email: str) -> str:
     async def _register_and_start():
         try:
             tool_id = await registry.register_tool(
-                    tool_name="email_bank_statement",
-                    cancel_async_fn=_cancel_statement,
-                    metadata={"email": email},
-                )
+                tool_name="email_bank_statement",
+                cancel_async_fn=_cancel_statement,
+                metadata={"email": email},
+            )
             tool_id_holder["tool_id"] = tool_id
             registration_complete.set()
             asyncio.create_task(_send_statement_background(tool_id))

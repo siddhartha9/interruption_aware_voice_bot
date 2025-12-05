@@ -424,7 +424,7 @@ class VoiceBotClient:
                     
                     print(f"[Client {self.client_id}]   🚨 Interrupting with new query...")
                     await self.send_speech_event(audio_duration_ms=1500)
-                    
+                
                     # 4. Wait for the interruption response
                     result = await self.wait_for_response()
                     if result["success"]:
